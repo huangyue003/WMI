@@ -7,12 +7,13 @@ jobs:
     runs-on: windows-latest
     strategy:
       matrix:
-        platform: [AnyCPU, x64]
+        platform: ['Any CPU', x64]
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
         with:
           global-json-file: global.json
-      - run: dotnet build IFactory.WMI.slnx -c Release -p:Platform=${{ matrix.platform }} -warnaserror
-      - run: dotnet test IFactory.WMI.slnx -c Release -p:Platform=${{ matrix.platform }} --no-build --logger "console;verbosity=normal"
+      - run: dotnet build IFactory.WMI.slnx -c Release -p:Platform="${{ matrix.platform }}" -warnaserror
+      - run: dotnet test IFactory.WMI.slnx -c Release -p:Platform="${{ matrix.platform }}" --no-build --logger "console;verbosity=normal"
       # x86 is validated locally with an explicitly installed x86 .NET 10 runtime.
+
