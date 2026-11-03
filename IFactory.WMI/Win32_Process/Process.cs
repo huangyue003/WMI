@@ -11,7 +11,7 @@ namespace IFactory.WMI.Win32_Process
     /// <summary>
     /// https://learn.microsoft.com/zh-cn/windows/win32/cimwin32prov/win32-process
     /// </summary>
-    public class Process
+    public class Process : IDisposable
     {
         public static Process? Get(string name)
         {
@@ -21,8 +21,9 @@ namespace IFactory.WMI.Win32_Process
         public static Process? Get(string name, ManagementScope scope)
         {
             ManagementObject? instance = null;
-            ObjectQuery query = new ObjectQuery($"SELECT * FROM Win32_Process WHERE Name='{name}'");
-            var collection = new ManagementObjectSearcher(scope, query).Get();
+            ObjectQuery query = new ObjectQuery($"SELECT * FROM Win32_Process WHERE Name='{WmiValue.Escape(name)}'");
+            using var searcher = new ManagementObjectSearcher(scope, query);
+            using var collection = searcher.Get();
             foreach (ManagementObject item in collection)
             {
                 instance = item;
@@ -35,7 +36,8 @@ namespace IFactory.WMI.Win32_Process
         {
             _proxy = proxy;
         }
-        private ManagementObject _proxy;
+        private readonly ManagementObject _proxy;
+        public void Dispose() => _proxy.Dispose();
 
         #region Properties
 
@@ -51,7 +53,7 @@ namespace IFactory.WMI.Win32_Process
         /// <summary>
         /// 进程开始执行的日期。
         /// </summary>
-        public DateTime CreationDate => (DateTime)_proxy[nameof(CreationDate)];
+        public DateTime CreationDate => WmiValue.Date(_proxy[nameof(CreationDate)]);
         /// <summary>
         /// 范围计算机系统的创建类名称。
         /// </summary>
@@ -83,7 +85,7 @@ namespace IFactory.WMI.Win32_Process
         /// <summary>
         /// 对象的安装日期。 可以在不将值写入此属性的情况下安装 对象。
         /// </summary>
-        public DateTime InstallDate => (DateTime)_proxy[nameof(InstallDate)];
+        public DateTime InstallDate => WmiValue.Date(_proxy[nameof(InstallDate)]);
         /// <summary>
         /// 内核模式下的时间（以毫秒为单位）。 如果此信息不可用，请使用值 0 (零) 。
         /// </summary>
@@ -145,7 +147,7 @@ namespace IFactory.WMI.Win32_Process
         public UInt64 ReadTransferCount => (UInt64)_proxy[nameof(ReadTransferCount)];
         public uint SessionId => (uint)_proxy[nameof(SessionId)];
         public string Status => (string)_proxy[nameof(Status)];
-        public DateTime TerminationDate => (DateTime)_proxy[nameof(TerminationDate)];
+        public DateTime TerminationDate => WmiValue.Date(_proxy[nameof(TerminationDate)]);
         public uint ThreadCount => (uint)_proxy[nameof(ThreadCount)];
         public UInt64 UserModeTime => (UInt64)_proxy[nameof(UserModeTime)];
         public UInt64 VirtualSize => (UInt64)_proxy[nameof(VirtualSize)];
@@ -173,17 +175,18 @@ namespace IFactory.WMI.Win32_Process
         public static uint Create(CreateOptions options, ManagementScope scope, out uint processId)
         {
             processId = 0;
-            ManagementClass processStartup = new ManagementClass(scope, new ManagementPath("Win32_ProcessStartup"), null);
-            processStartup.SetPropertyValue(options.ProcessStartup);
+            using ManagementClass processStartup = new ManagementClass(scope, new ManagementPath("Win32_ProcessStartup"), null);
+            using var startupInstance = processStartup.CreateInstance()!;
+            startupInstance.SetPropertyValue(options.ProcessStartup);
 
             var methodName = "Create";
-            ManagementClass reg = new ManagementClass(scope, new ManagementPath("Win32_Process"), null);
-            ManagementBaseObject inParams = reg.GetMethodParameters(methodName);
+            using ManagementClass reg = new ManagementClass(scope, new ManagementPath("Win32_Process"), null);
+            using ManagementBaseObject inParams = reg.GetMethodParameters(methodName);
 
             inParams.SetPropertyValue("CommandLine", options.CommandLine);
             inParams.SetPropertyValue("CurrentDirectory", options.CurrentDirectory);
-            inParams.SetPropertyValue("ProcessStartupInformation", processStartup);
-            var outParams = reg.InvokeMethod(methodName, inParams, null);
+            inParams.SetPropertyValue("ProcessStartupInformation", startupInstance);
+            using var outParams = reg.InvokeMethod(methodName, inParams, null);
             var returnValue = (uint)outParams["ReturnValue"];
             if (returnValue == 0)
                 processId = (uint)outParams["ProcessId"];
@@ -193,17 +196,17 @@ namespace IFactory.WMI.Win32_Process
         public uint Terminate(uint reason)
         {
             var methodName = "Terminate";
-            var inParams = _proxy.GetMethodParameters(methodName);
+            using var inParams = _proxy.GetMethodParameters(methodName);
             inParams.SetPropertyValue("Reason", reason);
-            var outParams = _proxy.InvokeMethod(methodName, inParams, null);
+            using var outParams = _proxy.InvokeMethod(methodName, inParams, null);
             return (uint)outParams["ReturnValue"];
         }
         public uint SetPriority(PriorityClass priority)
         {
             var methodName = "SetPriority";
-            var inParams = _proxy.GetMethodParameters(methodName);
+            using var inParams = _proxy.GetMethodParameters(methodName);
             inParams.SetPropertyValue("Priority", priority);
-            var outParams = _proxy.InvokeMethod(methodName, inParams, null);
+            using var outParams = _proxy.InvokeMethod(methodName, inParams, null);
             return (uint)outParams["ReturnValue"];
         }
     }

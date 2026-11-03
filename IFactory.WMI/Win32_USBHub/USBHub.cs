@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace IFactory.WMI.Win32_USBHub
 {
-    public class USBHub
+    public class USBHub : IDisposable
     {
         public static USBHub? Get(string name)
         {
@@ -17,8 +17,9 @@ namespace IFactory.WMI.Win32_USBHub
         public static USBHub? Get(string name, ManagementScope scope)
         {
             ManagementObject? instance = null;
-            ObjectQuery query = new ObjectQuery($"SELECT * FROM Win32_USBHub WHERE Name='{name}'");
-            var collection = new ManagementObjectSearcher(scope, query).Get();
+            ObjectQuery query = new ObjectQuery($"SELECT * FROM Win32_USBHub WHERE Name='{WmiValue.Escape(name)}'");
+            using var searcher = new ManagementObjectSearcher(scope, query);
+            using var collection = searcher.Get();
             foreach (ManagementObject item in collection)
             {
                 instance = item;
@@ -30,7 +31,8 @@ namespace IFactory.WMI.Win32_USBHub
         public static IEnumerable<USBHub> Get(ManagementScope scope)
         {
             ObjectQuery query = new ObjectQuery($"SELECT * FROM Win32_USBHub");
-            var collection = new ManagementObjectSearcher(scope, query).Get();
+            using var searcher = new ManagementObjectSearcher(scope, query);
+            using var collection = searcher.Get();
             foreach (ManagementObject item in collection)
                 yield return new USBHub(item);
         }
@@ -39,7 +41,8 @@ namespace IFactory.WMI.Win32_USBHub
         {
             _proxy = proxy;
         }
-        private ManagementObject _proxy;
+        private readonly ManagementObject _proxy;
+        public void Dispose() => _proxy.Dispose();
 
         #region Properties
 
@@ -54,7 +57,7 @@ namespace IFactory.WMI.Win32_USBHub
         public bool ErrorCleared=> (bool)_proxy[nameof(ErrorCleared)];
         public string ErrorDescription=> (string)_proxy[nameof(ErrorDescription)];
         public bool GangSwitched=> (bool)_proxy[nameof(GangSwitched)];
-        public DateTime InstallDate=> (DateTime)_proxy[nameof(InstallDate)];
+        public DateTime InstallDate=> WmiValue.Date(_proxy[nameof(InstallDate)]);
         public uint LastErrorCode=> (uint)_proxy[nameof(LastErrorCode)];
         public byte NumberOfConfigs=> (byte)_proxy[nameof(NumberOfConfigs)];
         public byte NumberOfPorts=> (byte)_proxy[nameof(NumberOfPorts)];

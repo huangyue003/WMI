@@ -8,7 +8,7 @@ using System.Threading.Tasks;
 
 namespace IFactory.WMI.Win32_NetworkAdapterConfiguration
 {
-    public class NetworkAdapterConfiguration
+    public class NetworkAdapterConfiguration : IDisposable
     {
         public static NetworkAdapterConfiguration? Get(string name)
         {
@@ -18,8 +18,9 @@ namespace IFactory.WMI.Win32_NetworkAdapterConfiguration
         public static NetworkAdapterConfiguration? Get(string name, ManagementScope scope)
         {
             ManagementObject? instance = null;
-            ObjectQuery query = new ObjectQuery($"SELECT * FROM Win32_NetworkAdapterConfiguration WHERE Name='{name}'");
-            var collection = new ManagementObjectSearcher(scope, query).Get();
+            ObjectQuery query = new ObjectQuery($"SELECT * FROM Win32_NetworkAdapterConfiguration WHERE SettingID='{WmiValue.Escape(name)}'");
+            using var searcher = new ManagementObjectSearcher(scope, query);
+            using var collection = searcher.Get();
             foreach (ManagementObject item in collection)
             {
                 instance = item;
@@ -36,7 +37,8 @@ namespace IFactory.WMI.Win32_NetworkAdapterConfiguration
         public static IEnumerable<NetworkAdapterConfiguration> Get(ManagementScope scope)
         {
             ObjectQuery query = new ObjectQuery($"SELECT * FROM Win32_NetworkAdapterConfiguration WHERE IPEnabled = TRUE");
-            var collection = new ManagementObjectSearcher(scope, query).Get();
+            using var searcher = new ManagementObjectSearcher(scope, query);
+            using var collection = searcher.Get();
             foreach (ManagementObject item in collection)
                 yield return new NetworkAdapterConfiguration(item);
         }
@@ -45,7 +47,8 @@ namespace IFactory.WMI.Win32_NetworkAdapterConfiguration
         {
             _proxy = proxy;
         }
-        private ManagementObject _proxy;
+        private readonly ManagementObject _proxy;
+        public void Dispose() => _proxy.Dispose();
 
         #region Properties
 
@@ -60,8 +63,8 @@ namespace IFactory.WMI.Win32_NetworkAdapterConfiguration
         public byte DefaultTOS => (byte)_proxy[nameof(DefaultTOS)];
         public byte DefaultTTL => (byte)_proxy[nameof(DefaultTTL)];
         public bool DHCPEnabled => (bool)_proxy[nameof(DHCPEnabled)];
-        public DateTime DHCPLeaseExpires => (DateTime)_proxy[nameof(DHCPLeaseExpires)];
-        public DateTime DHCPLeaseObtained => (DateTime)_proxy[nameof(DHCPLeaseObtained)];
+        public DateTime DHCPLeaseExpires => WmiValue.Date(_proxy[nameof(DHCPLeaseExpires)]);
+        public DateTime DHCPLeaseObtained => WmiValue.Date(_proxy[nameof(DHCPLeaseObtained)]);
         public string DHCPServer => (string)_proxy[nameof(DHCPServer)];
         public string DNSDomain => (string)_proxy[nameof(DNSDomain)];
         public string[] DNSDomainSuffixSearchOrder => (string[])_proxy[nameof(DNSDomainSuffixSearchOrder)];

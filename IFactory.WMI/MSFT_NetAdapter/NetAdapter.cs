@@ -8,18 +8,19 @@ using System.Threading.Tasks;
 
 namespace IFactory.WMI.MSFT_NetAdapter
 {
-    public class NetAdapter
+    public class NetAdapter : IDisposable
     {
         public static NetAdapter? Get(string name)
         {
-            var scope = ManagementScopeExtensions.CreateDefault();
+            var scope = ManagementScopeExtensions.Create("localhost", @"root\StandardCimv2", new ConnectionOptions());
             return Get(name, scope);
         }
         public static NetAdapter? Get(string name, ManagementScope scope)
         {
             ManagementObject? instance = null;
-            ObjectQuery query = new ObjectQuery($"SELECT * FROM MSFT_NetAdapter  WHERE Name='{name}'");
-            var collection = new ManagementObjectSearcher(scope, query).Get();
+            ObjectQuery query = new ObjectQuery($"SELECT * FROM MSFT_NetAdapter  WHERE Name='{WmiValue.Escape(name)}'");
+            using var searcher = new ManagementObjectSearcher(scope, query);
+            using var collection = searcher.Get();
             foreach (ManagementObject item in collection)
             {
                 instance = item;
@@ -44,7 +45,8 @@ namespace IFactory.WMI.MSFT_NetAdapter
         public static IEnumerable<NetAdapter> Get(ManagementScope scope)
         {
             ObjectQuery query = new ObjectQuery($"SELECT * FROM MSFT_NetAdapter ");
-            var collection = new ManagementObjectSearcher(scope, query).Get();
+            using var searcher = new ManagementObjectSearcher(scope, query);
+            using var collection = searcher.Get();
             foreach (ManagementObject item in collection)
                 yield return new NetAdapter(item);
         }
@@ -53,13 +55,14 @@ namespace IFactory.WMI.MSFT_NetAdapter
         {
             _proxy = proxy;
         }
-        private ManagementObject _proxy;
+        private readonly ManagementObject _proxy;
+        public void Dispose() => _proxy.Dispose();
 
         #region Properties
 
         public string Caption=> (string)_proxy[nameof(Caption)];
         public string Description=> (string)_proxy[nameof(Description)];
-        public DateTime InstallDate=> (DateTime)_proxy[nameof(InstallDate)];
+        public DateTime InstallDate=> WmiValue.Date(_proxy[nameof(InstallDate)]);
         public string Name=> (string)_proxy[nameof(Name)];
         public string Status=> (string)_proxy[nameof(Status)];
         public UInt16 Availability=> (UInt16)_proxy[nameof(Availability)];
@@ -69,7 +72,7 @@ namespace IFactory.WMI.MSFT_NetAdapter
         public string DeviceID=> (string)_proxy[nameof(DeviceID)];
         public bool ErrorCleared=> (bool)_proxy[nameof(ErrorCleared)];
         public string ErrorDescription=> (string)_proxy[nameof(ErrorDescription)];
-        public UInt32 LastErrorCode=> (UInt16)_proxy[nameof(LastErrorCode)];
+        public UInt32 LastErrorCode=> (UInt32)_proxy[nameof(LastErrorCode)];
         public string PNPDeviceID=> (string)_proxy[nameof(PNPDeviceID)];
         public UInt16[] PowerManagementCapabilities=> (UInt16[])_proxy[nameof(PowerManagementCapabilities)];
         public bool PowerManagementSupported=> (bool)_proxy[nameof(PowerManagementSupported)];

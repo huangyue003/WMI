@@ -11,7 +11,7 @@ namespace IFactory.WMI.Win32_Service
     /// <summary>
     /// Windows Service 操作类
     /// </summary>
-    public class Service
+    public class Service : IDisposable
     {
         public static Service? Get(string name)
         {
@@ -21,8 +21,9 @@ namespace IFactory.WMI.Win32_Service
         public static Service? Get(string name, ManagementScope scope)
         {
             ManagementObject? instance = null;
-            ObjectQuery query = new ObjectQuery($"SELECT * FROM Win32_Service WHERE Name='{name}'");
-            var collection = new ManagementObjectSearcher(scope, query).Get();
+            ObjectQuery query = new ObjectQuery($"SELECT * FROM Win32_Service WHERE Name='{WmiValue.Escape(name)}'");
+            using var searcher = new ManagementObjectSearcher(scope, query);
+            using var collection = searcher.Get();
             foreach (ManagementObject item in collection)
             {
                 instance = item;
@@ -35,7 +36,8 @@ namespace IFactory.WMI.Win32_Service
         {
             _proxy = proxy;
         }
-        private ManagementObject _proxy;
+        private readonly ManagementObject _proxy;
+        public void Dispose() => _proxy.Dispose();
 
         #region Properties
         /// <summary>
@@ -85,7 +87,7 @@ namespace IFactory.WMI.Win32_Service
         /// <summary>
         /// 安装日期对象。 此属性不需要值来指示对象已安装。
         /// </summary>
-        public DateTime InstallDate => (DateTime)_proxy[nameof(InstallDate)];
+        public DateTime InstallDate => WmiValue.Date(_proxy[nameof(InstallDate)]);
         /// <summary>
         /// 服务的唯一标识符，用于指示所管理的功能。 对象的 Description 属性中介绍了此功能。
         /// </summary>
@@ -186,17 +188,17 @@ namespace IFactory.WMI.Win32_Service
         public uint Change(ChangeOptions options)
         {
             var methodName = "Change";
-            var inParams = _proxy.GetMethodParameters(methodName);
+            using var inParams = _proxy.GetMethodParameters(methodName);
             inParams.SetPropertyValue(options);
-            var outParams = _proxy.InvokeMethod(methodName, inParams, null);
+            using var outParams = _proxy.InvokeMethod(methodName, inParams, null);
             return (uint)outParams["ReturnValue"];
         }
         public uint ChangeStartMode(StartMode mode)
         {
             var methodName = "ChangeStartMode";
-            var inParams = _proxy.GetMethodParameters(methodName);
+            using var inParams = _proxy.GetMethodParameters(methodName);
             inParams["StartMode"] = mode.ToString();
-            var outParams = _proxy.InvokeMethod(methodName, inParams, null);
+            using var outParams = _proxy.InvokeMethod(methodName, inParams, null);
             return (uint)outParams["ReturnValue"];
         }
         public uint DeleteService()
@@ -217,13 +219,13 @@ namespace IFactory.WMI.Win32_Service
             if (string.IsNullOrWhiteSpace(options.DisplayName)) throw new ArgumentNullException("options.DisplayName");
 
             var methodName = "Create";
-            ManagementClass reg = new ManagementClass(scope, new ManagementPath("Win32_Service"), null);
-            ManagementBaseObject inParams = reg.GetMethodParameters(methodName);
+            using ManagementClass reg = new ManagementClass(scope, new ManagementPath("Win32_Service"), null);
+            using ManagementBaseObject inParams = reg.GetMethodParameters(methodName);
             if (options.ServiceType == null) options.ServiceType = (uint)Win32_Service.ServiceType.OwnProces;
             if (options.StartMode == null) options.StartMode = Win32_Service.StartMode.Automatic.ToString();
             if (options.ErrorControl == null) options.ErrorControl = (uint)Win32_Service.ErrorControl.Normal;
             inParams.SetPropertyValue(options);
-            var outParams = reg.InvokeMethod(methodName, inParams, null);
+            using var outParams = reg.InvokeMethod(methodName, inParams, null);
             return (uint)outParams["ReturnValue"];
         }
         public static uint Create(CreateOptions options)

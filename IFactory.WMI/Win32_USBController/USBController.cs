@@ -8,7 +8,7 @@ using System.Xml.Linq;
 
 namespace IFactory.WMI.Win32_USBController
 {
-    public class USBController
+    public class USBController : IDisposable
     {
         public static USBController? Get(string name)
         {
@@ -18,8 +18,9 @@ namespace IFactory.WMI.Win32_USBController
         public static USBController? Get(string name, ManagementScope scope)
         {
             ManagementObject? instance = null;
-            ObjectQuery query = new ObjectQuery($"SELECT * FROM Win32_USBController WHERE Name='{name}'");
-            var collection = new ManagementObjectSearcher(scope, query).Get();
+            ObjectQuery query = new ObjectQuery($"SELECT * FROM Win32_USBController WHERE Name='{WmiValue.Escape(name)}'");
+            using var searcher = new ManagementObjectSearcher(scope, query);
+            using var collection = searcher.Get();
             foreach (ManagementObject item in collection)
             {
                 instance = item;
@@ -31,7 +32,8 @@ namespace IFactory.WMI.Win32_USBController
         public static IEnumerable<USBController> Get(ManagementScope scope)
         {
             ObjectQuery query = new ObjectQuery($"SELECT * FROM Win32_USBController");
-            var collection = new ManagementObjectSearcher(scope, query).Get();
+            using var searcher = new ManagementObjectSearcher(scope, query);
+            using var collection = searcher.Get();
             foreach (ManagementObject item in collection)
                 yield return new USBController(item);
         }
@@ -40,7 +42,8 @@ namespace IFactory.WMI.Win32_USBController
         {
             _proxy = proxy;
         }
-        private ManagementObject _proxy;
+        private readonly ManagementObject _proxy;
+        public void Dispose() => _proxy.Dispose();
 
         #region Properties
 
@@ -53,7 +56,7 @@ namespace IFactory.WMI.Win32_USBController
         public string DeviceID => (string)_proxy[nameof(DeviceID)];
         public bool ErrorCleared => (bool)_proxy[nameof(ErrorCleared)];
         public string ErrorDescription => (string)_proxy[nameof(ErrorDescription)];
-        public DateTime InstallDate => (DateTime)_proxy[nameof(InstallDate)];
+        public DateTime InstallDate => WmiValue.Date(_proxy[nameof(InstallDate)]);
         public uint LastErrorCode => (uint)_proxy[nameof(LastErrorCode)];
         public string Manufacturer => (string)_proxy[nameof(Manufacturer)];
         public uint MaxNumberControlled => (uint)_proxy[nameof(MaxNumberControlled)];
@@ -66,8 +69,8 @@ namespace IFactory.WMI.Win32_USBController
         public UInt16 StatusInfo => (UInt16)_proxy[nameof(StatusInfo)];
         public string SystemCreationClassName => (string)_proxy[nameof(SystemCreationClassName)];
         public string SystemName => (string)_proxy[nameof(SystemName)];
-        public DateTime TimeOfLastReset => (DateTime)_proxy[nameof(TimeOfLastReset)];
+        public DateTime TimeOfLastReset => WmiValue.Date(_proxy[nameof(TimeOfLastReset)]);
 
-        #endregion       
+        #endregion
     }
 }

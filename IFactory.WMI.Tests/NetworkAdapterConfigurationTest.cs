@@ -1,19 +1,14 @@
 using IFactory.WMI.Win32_NetworkAdapterConfiguration;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 using Xunit;
-
-namespace IFactory.WMI.Tests
+namespace IFactory.WMI.Tests;
+public class NetworkAdapterConfigurationTest
 {
-    public class NetworkAdapterConfigurationTest
-    {
-        [Fact]
-        public void GetNetworkAdapterConfigurations()
-        {
-            var configurations = NetworkAdapterConfiguration.Get();
-        }
-    }
+ [Fact]
+ public void EnumeratesLocalProvider()
+ {
+  foreach (var item in NetworkAdapterConfiguration.Get())
+  {
+   using (item) { Assert.False(string.IsNullOrEmpty(item.SettingID)); Assert.True(item.IPEnabled); }
+  }
+ }
 }
