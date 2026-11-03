@@ -16,4 +16,3 @@ jobs:
       - run: dotnet build IFactory.WMI.slnx -c Release -p:Platform="${{ matrix.platform }}" -warnaserror
       - run: dotnet test IFactory.WMI.slnx -c Release -p:Platform="${{ matrix.platform }}" --no-build --logger "console;verbosity=normal"
       # x86 is validated locally with an explicitly installed x86 .NET 10 runtime.
-
