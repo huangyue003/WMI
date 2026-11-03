@@ -67,4 +67,4 @@ Remove-Item Env:WMI_TEST_SERVICE_MUTATION
 
 ## 公开交付
 
-源码、测试、构建和正式文档提交；原始讨论记录、助手状态、一次性脚本、测试结果与覆盖率产物由 .gitignore 排除。GitHub Description 与 Wiki 为生成文稿，不等于已修改仓库设置或发布 Wiki。敏感信息检查范围和结果单列于 [PUBLIC-CONTENT-CHECK.md](docs/PUBLIC-CONTENT-CHECK.md)。
+源码、测试、构建和正式文档提交；原始讨论记录、助手状态、一次性脚本、测试结果与覆盖率产物由 .gitignore 排除。GitHub Description 已写入仓库 About；Wiki 首页已于 2026-11-03 发布并核对：[在线 Wiki](https://github.com/huangyue003/WMI/wiki)。仓库保留首页正文副本。敏感信息检查范围和结果单列于 [PUBLIC-CONTENT-CHECK.md](docs/PUBLIC-CONTENT-CHECK.md)。

@@ -18,4 +18,4 @@
 
 ## 文稿发布边界
 
-`docs/GITHUB_DESCRIPTION.txt` 是可复制的 Description；`docs/wiki/Home.md` 是可复制的 Wiki 首页。两者随源码保存，但这不表示 GitHub 仓库设置已更新或 Wiki 已发布。原始讨论和一次性迁移脚本不属于公开交付物。
+`docs/GITHUB_DESCRIPTION.txt` 的内容已写入 GitHub 仓库 Description；`docs/wiki/Home.md` 对应首页已于 2026-11-03 发布到 [GitHub Wiki](https://github.com/huangyue003/WMI/wiki) 并核对显示。原始讨论和一次性迁移脚本不属于公开交付物。

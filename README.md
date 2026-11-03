@@ -61,4 +61,4 @@ Console.WriteLine(process?.ProcessId);
 - [审查决策与验证](VALIDATION.md)
 - [公开内容检查](docs/PUBLIC-CONTENT-CHECK.md)
 - [GitHub Description 文稿](docs/GITHUB_DESCRIPTION.txt)
-- [可复制的 Wiki 首页](docs/wiki/Home.md)（代码仓库文件，不代表已发布 Wiki）
+- [GitHub Wiki 首页](https://github.com/huangyue003/WMI/wiki)（[仓库内副本](docs/wiki/Home.md)）

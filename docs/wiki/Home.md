@@ -61,4 +61,4 @@ dotnet test IFactory.WMI.slnx -c Release --no-build
 - [属性可空清单](https://github.com/huangyue003/WMI/blob/main/docs/NULLABILITY.md)
 - [公开内容检查](https://github.com/huangyue003/WMI/blob/main/docs/PUBLIC-CONTENT-CHECK.md)
 
-此文件为 Wiki 首页文稿。仓库包含文稿不等于 GitHub Wiki 已创建或发布。
+此文件为已发布的 [GitHub Wiki 首页](https://github.com/huangyue003/WMI/wiki) 的仓库内正文副本。
