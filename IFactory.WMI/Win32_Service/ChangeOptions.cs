@@ -1,9 +1,3 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
 namespace IFactory.WMI.Win32_Service
 {
     public class ChangeOptions
@@ -19,15 +13,15 @@ namespace IFactory.WMI.Win32_Service
         /// <summary>
         /// 提供给调用它们的进程的服务类型
         /// </summary>
-        public uint? ServiceType{ get; set; }
+        public ServiceType? ServiceType{ get; set; }
         /// <summary>
         /// 如果此服务在启动期间无法启动，则错误的严重性。 该值指示启动程序在发生故障时采取的操作。 所有错误都由系统记录。
         /// </summary>
-        public uint? ErrorControl{ get; set; }
+        public ErrorControl? ErrorControl{ get; set; }
         /// <summary>
         /// Windows 基本服务的启动模式
         /// </summary>
-        public string? StartMode{ get; set; }
+        public StartMode? StartMode{ get; set; }
         public bool? DesktopInteract{ get; set; }
         public string? StartName{ get; set; }
         public string? StartPassword{ get; set; }

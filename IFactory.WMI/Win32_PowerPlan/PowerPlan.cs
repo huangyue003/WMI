@@ -1,10 +1,4 @@
-using IFactory.WMI.Win32_LogicalDisk;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Management;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace IFactory.WMI.Win32_PowerPlan
 {
@@ -18,15 +12,7 @@ namespace IFactory.WMI.Win32_PowerPlan
         public void Dispose() => _proxy.Dispose();
         public static IEnumerable<PowerPlan> Get()
         {
-            string host = "localhost";
-            string wmiNamespace = "root\\cimv2\\power";
-            ConnectionOptions options = new ConnectionOptions
-            {
-                Impersonation = ImpersonationLevel.Impersonate,
-                Authentication = AuthenticationLevel.PacketPrivacy,
-                EnablePrivileges = true,
-            };
-            var scope = ManagementScopeExtensions.Create(host,wmiNamespace,options);
+            var scope = ManagementScopeExtensions.CreateDefault(@"root\cimv2\power");
             return Get(scope);
         }
         public static IEnumerable<PowerPlan> Get(ManagementScope scope)
@@ -38,9 +24,9 @@ namespace IFactory.WMI.Win32_PowerPlan
                 yield return new PowerPlan(item);
         }
 
-        public string InstanceID => (string)_proxy[nameof(InstanceID)];
-        public string ElementName => (string)_proxy[nameof(ElementName)];
-        public string Description => (string)_proxy[nameof(Description)];
+        public string? InstanceID => (string?)_proxy[nameof(InstanceID)];
+        public string? ElementName => (string?)_proxy[nameof(ElementName)];
+        public string? Description => (string?)_proxy[nameof(Description)];
         public bool IsActive => (bool)_proxy[nameof(IsActive)];
 
     }

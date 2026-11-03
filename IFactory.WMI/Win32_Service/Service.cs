@@ -1,10 +1,5 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
+using System.Collections.Frozen;
 using System.Management;
-using System.Reflection;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace IFactory.WMI.Win32_Service
 {
@@ -32,11 +27,13 @@ namespace IFactory.WMI.Win32_Service
             return instance == null ? null : new Service(instance);
         }
 
-        private Service(ManagementObject proxy)
+        internal Service(ManagementObject proxy, Func<string, uint>? invoke = null)
         {
             _proxy = proxy;
+            _invoke = invoke ?? (method => (uint)_proxy.InvokeMethod(method, []));
         }
         private readonly ManagementObject _proxy;
+        private readonly Func<string, uint> _invoke;
         public void Dispose() => _proxy.Dispose();
 
         #region Properties
@@ -51,7 +48,7 @@ namespace IFactory.WMI.Win32_Service
         /// <summary>
         /// 服务的简短说明 - 单行字符串
         /// </summary>
-        public string Caption => (string)_proxy[nameof(Caption)];
+        public string? Caption => (string?)_proxy[nameof(Caption)];
         /// <summary>
         /// 服务定期递增以在长时间启动、停止、暂停或继续操作期间报告其进度的值。 例如，服务在启动时完成其初始化的每个步骤时递增此值。 在服务上调用 操作的用户界面程序在长时间操作期间使用此值跟踪服务的进度。 此值无效，当服务没有挂起的启动、停止、暂停或继续操作时，此值应为零。
         /// </summary>
@@ -59,7 +56,7 @@ namespace IFactory.WMI.Win32_Service
         /// <summary>
         /// 在创建实例时使用的继承链中显示的第一个具体类的名称。 与 类的其他键属性一起使用时，此属性允许对此类的所有实例及其子类进行唯一标识。
         /// </summary>
-        public string CreationClassName => (string)_proxy[nameof(CreationClassName)];
+        public string? CreationClassName => (string?)_proxy[nameof(CreationClassName)];
         /// <summary>
         /// 如果 为 True，则服务在其他自动启动服务启动后启动，并出现短暂延迟。
         /// </summary>
@@ -67,7 +64,7 @@ namespace IFactory.WMI.Win32_Service
         /// <summary>
         /// 对象的说明。
         /// </summary>
-        public string Description => (string)_proxy[nameof(Description)];
+        public string? Description => (string?)_proxy[nameof(Description)];
         /// <summary>
         /// 指示服务是否可以在桌面上创建窗口或与 Windows 通信，从而以某种方式与用户交互。 交互式服务必须在本地系统帐户下运行。 大多数服务不是交互式的;也就是说，它们不会以任何方式与用户通信。
         /// </summary>
@@ -75,11 +72,11 @@ namespace IFactory.WMI.Win32_Service
         /// <summary>
         /// 在“服务”管理单元中查看的服务的名称。 此字符串的最大长度为 256 个字符。 请注意，存储在注册表) 中的显示名称和服务名称 (并不总是相同的。 例如，DHCP 客户端服务的服务名称为 Dhcp，但显示名称为 DHCP 客户端。 名称在服务控制管理器中保留大小写。 但是， DisplayName 比较始终不区分大小写。
         /// </summary>
-        public string DisplayName => (string)_proxy[nameof(DisplayName)];
+        public string? DisplayName => (string?)_proxy[nameof(DisplayName)];
         /// <summary>
         /// 如果此服务在启动期间无法启动，则错误的严重性。 值指示启动程序在发生故障时采取的操作。 所有的错误都由计算机系统记录。
         /// </summary>
-        public string ErrorControl => (string)_proxy[nameof(ErrorControl)];
+        public string? ErrorControl => (string?)_proxy[nameof(ErrorControl)];
         /// <summary>
         /// 定义在启动或停止服务时遇到的错误的 Windows 错误代码。
         /// </summary>
@@ -91,11 +88,11 @@ namespace IFactory.WMI.Win32_Service
         /// <summary>
         /// 服务的唯一标识符，用于指示所管理的功能。 对象的 Description 属性中介绍了此功能。
         /// </summary>
-        public string Name => (string)_proxy[nameof(Name)];
+        public string? Name => (string?)_proxy[nameof(Name)];
         /// <summary>
         /// 实现服务的服务二进制文件的完全限定路径
         /// </summary>
-        public string PathName => (string)_proxy[nameof(PathName)];
+        public string? PathName => (string?)_proxy[nameof(PathName)];
         /// <summary>
         /// 服务的进程标识符。
         /// </summary>
@@ -107,7 +104,7 @@ namespace IFactory.WMI.Win32_Service
         /// <summary>
         /// 用于调用进程的服务的类型
         /// </summary>
-        public string ServiceType => (string)_proxy[nameof(ServiceType)];
+        public string? ServiceType => (string?)_proxy[nameof(ServiceType)];
         /// <summary>
         /// 指示服务是否已启动。
         /// </summary>
@@ -115,27 +112,27 @@ namespace IFactory.WMI.Win32_Service
         /// <summary>
         /// Windows 基本服务的启动模式。
         /// </summary>
-        public string StartMode => (string)_proxy[nameof(StartMode)];
+        public string? StartMode => (string?)_proxy[nameof(StartMode)];
         /// <summary>
         /// 运行服务的帐户名称。 根据服务类型，帐户名称可能采用“DomainName\Username”或 UPN 格式
         /// </summary>
-        public string StartName => (string)_proxy[nameof(StartName)];
+        public string? StartName => (string?)_proxy[nameof(StartName)];
         /// <summary>
         /// 基本服务的当前状态。
         /// </summary>
-        public string State => (string)_proxy[nameof(State)];
+        public string? State => (string?)_proxy[nameof(State)];
         /// <summary>
         /// 对象的当前状态。 可以定义各种操作和非操作状态。
         /// </summary>
-        public string Status => (string)_proxy[nameof(Status)];
+        public string? Status => (string?)_proxy[nameof(Status)];
         /// <summary>
         /// 键入承载此服务的系统的名称。
         /// </summary>
-        public string SystemCreationClassName => (string)_proxy[nameof(SystemCreationClassName)];
+        public string? SystemCreationClassName => (string?)_proxy[nameof(SystemCreationClassName)];
         /// <summary>
         /// 承载此服务的系统的名称。
         /// </summary>
-        public string SystemName => (string)_proxy[nameof(SystemName)];
+        public string? SystemName => (string?)_proxy[nameof(SystemName)];
         /// <summary>
         /// 仅针对具有启动模式或系统启动模式的内核驱动程序和文件系统驱动程序启动类型服务评估标记
         /// </summary>
@@ -152,7 +149,7 @@ namespace IFactory.WMI.Win32_Service
             if (ErrorCode.TryGetValue(errorCode, out var error)) return error;
             return "unknown error";
         }
-        public static Dictionary<uint, string> ErrorCode = new Dictionary<uint, string>()
+        public static IReadOnlyDictionary<uint, string> ErrorCode { get; } = new Dictionary<uint, string>()
         {
             [0] = "",
             [1] = "The request is not supported.",
@@ -179,57 +176,47 @@ namespace IFactory.WMI.Win32_Service
             [22] = "The account under which this service runs is either invalid or lacks the permissions to run the service.",
             [23] = "The service exists in the database of services available from the system.",
             [24] = "The service is currently paused in the system.",
-        };
+        }.ToFrozenDictionary();
 
-        public uint StartService() => (uint)_proxy.InvokeMethod("StartService", []);
-        public uint StopService() => (uint)_proxy.InvokeMethod("StopService", []);
-        public uint PauseService() => (uint)_proxy.InvokeMethod("PauseService", []);
-        public uint ResumeService() => (uint)_proxy.InvokeMethod("ResumeService", []);
+        public uint StartService() => _invoke("StartService");
+        public uint StopService() => _invoke("StopService");
+        public uint PauseService() => _invoke("PauseService");
+        public uint ResumeService() => _invoke("ResumeService");
         public uint Change(ChangeOptions options)
         {
+            var parameters = WmiParameters.ServiceChange(options);
             var methodName = "Change";
             using var inParams = _proxy.GetMethodParameters(methodName);
-            inParams.SetPropertyValue(options);
+            WmiParameters.Apply(inParams, parameters);
             using var outParams = _proxy.InvokeMethod(methodName, inParams, null);
             return (uint)outParams["ReturnValue"];
         }
         public uint ChangeStartMode(StartMode mode)
         {
+            var startMode = WmiParameters.StartModeName(mode);
             var methodName = "ChangeStartMode";
             using var inParams = _proxy.GetMethodParameters(methodName);
-            inParams["StartMode"] = mode.ToString();
+            inParams["StartMode"] = startMode;
             using var outParams = _proxy.InvokeMethod(methodName, inParams, null);
             return (uint)outParams["ReturnValue"];
         }
-        public uint DeleteService()
-        {
-            if (State == ServiceState.Running)
-            {
-                var result = StopService();
-                if (result != 0) return result;
-            }
-            return (uint)_proxy.InvokeMethod("Delete", []);
-        }
-
+        /// <summary>Submits Delete without stopping the service; zero means accepted, not removed.</summary>
+        public uint DeleteService() => _invoke("Delete");
 
         public static uint Create(CreateOptions options, ManagementScope scope)
         {
-            if (string.IsNullOrWhiteSpace(options.Name)) throw new ArgumentNullException("options.Name");
-            if (string.IsNullOrWhiteSpace(options.PathName)) throw new ArgumentNullException("options.PathName");
-            if (string.IsNullOrWhiteSpace(options.DisplayName)) throw new ArgumentNullException("options.DisplayName");
-
+            var parameters = WmiParameters.ServiceCreate(options);
+            ArgumentNullException.ThrowIfNull(scope);
             var methodName = "Create";
             using ManagementClass reg = new ManagementClass(scope, new ManagementPath("Win32_Service"), null);
             using ManagementBaseObject inParams = reg.GetMethodParameters(methodName);
-            if (options.ServiceType == null) options.ServiceType = (uint)Win32_Service.ServiceType.OwnProces;
-            if (options.StartMode == null) options.StartMode = Win32_Service.StartMode.Automatic.ToString();
-            if (options.ErrorControl == null) options.ErrorControl = (uint)Win32_Service.ErrorControl.Normal;
-            inParams.SetPropertyValue(options);
+            WmiParameters.Apply(inParams, parameters);
             using var outParams = reg.InvokeMethod(methodName, inParams, null);
             return (uint)outParams["ReturnValue"];
         }
         public static uint Create(CreateOptions options)
         {
+            _ = WmiParameters.ServiceCreate(options);
             var scope = ManagementScopeExtensions.CreateDefault();
             return Create(options, scope);
         }

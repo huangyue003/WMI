@@ -49,3 +49,13 @@ Thumbs.db
 
 # Local WorkBuddy memory and agent state
 .workbuddy/
+
+# Local review conversation and assistant scratch state
+/CODE_REVIEW_DISCUSSION.md
+.codex/
+
+# Diagnostics and local publishing credentials
+*.dmp
+*.diagsession
+*.binlog
+*.pubxml

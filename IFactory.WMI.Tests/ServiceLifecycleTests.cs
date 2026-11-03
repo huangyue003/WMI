@@ -1,4 +1,3 @@
-using System.Management;
 using Xunit;
 using IFactory.WMI.Win32_Service;
 namespace IFactory.WMI.Tests;
@@ -10,7 +9,7 @@ public class ServiceLifecycleTests
   var name = "WmiLibraryTest_" + Guid.NewGuid().ToString("N");
   var executable = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.System), "cmd.exe");
   Assert.Null(Service.Get(name));
-  Assert.Equal(0u, Service.Create(new CreateOptions { Name=name, DisplayName=name, PathName=$"\"{executable}\"", StartMode="Manual" }));
+  Assert.Equal(0u, Service.Create(new CreateOptions { Name=name, DisplayName=name, PathName=$"\"{executable}\"", StartMode=StartMode.Manual }));
   try
   {
    using var service=Service.Get(name); Assert.NotNull(service);

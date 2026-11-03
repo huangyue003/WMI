@@ -1,10 +1,5 @@
-using IFactory.WMI.Win32_Service;
-using System;
-using System.Collections.Generic;
-using System.Linq;
+using System.Collections.Frozen;
 using System.Management;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace IFactory.WMI.Win32_Process
 {
@@ -41,15 +36,15 @@ namespace IFactory.WMI.Win32_Process
 
         #region Properties
 
-        public string CreationClassName => (string)_proxy[nameof(CreationClassName)];
+        public string? CreationClassName => (string?)_proxy[nameof(CreationClassName)];
         /// <summary>
         /// 对象的简短说明 - 单行字符串。
         /// </summary>
-        public string Caption => (string)_proxy[nameof(Caption)];
+        public string? Caption => (string?)_proxy[nameof(Caption)];
         /// <summary>
         /// 用于启动特定进程的命令行（如果适用）。
         /// </summary>
-        public string CommandLine => (string)_proxy[nameof(CommandLine)];
+        public string? CommandLine => (string?)_proxy[nameof(CommandLine)];
         /// <summary>
         /// 进程开始执行的日期。
         /// </summary>
@@ -57,19 +52,19 @@ namespace IFactory.WMI.Win32_Process
         /// <summary>
         /// 范围计算机系统的创建类名称。
         /// </summary>
-        public string CSCreationClassName => (string)_proxy[nameof(CSCreationClassName)];
+        public string? CSCreationClassName => (string?)_proxy[nameof(CSCreationClassName)];
         /// <summary>
         /// 范围计算机系统的名称。
         /// </summary>
-        public string CSName => (string)_proxy[nameof(CSName)];
+        public string? CSName => (string?)_proxy[nameof(CSName)];
         /// <summary>
         /// 对象的说明。
         /// </summary>
-        public string Description => (string)_proxy[nameof(Description)];
+        public string? Description => (string?)_proxy[nameof(Description)];
         /// <summary>
         /// 进程的可执行文件的路径。
         /// </summary>
-        public string ExecutablePath => (string)_proxy[nameof(ExecutablePath)];
+        public string? ExecutablePath => (string?)_proxy[nameof(ExecutablePath)];
         /// <summary>
         /// 进程的当前运行条件。Unknown 0  Other 1  Ready  2  Running  3
         /// </summary>
@@ -77,7 +72,7 @@ namespace IFactory.WMI.Win32_Process
         /// <summary>
         /// 进程标识符。
         /// </summary>
-        public string Handle => (string)_proxy[nameof(Handle)];
+        public string? Handle => (string?)_proxy[nameof(Handle)];
         /// <summary>
         /// 进程拥有的打开句柄总数。 HandleCount 是进程中每个线程当前打开的句柄之和。 句柄用于检查或修改系统资源。 每个句柄在表中都有一个在内部维护的条目。 条目包含用于标识资源类型的资源和数据的地址。
         /// </summary>
@@ -101,15 +96,15 @@ namespace IFactory.WMI.Win32_Process
         /// <summary>
         /// 负责进程的可执行文件的名称，等效于任务管理器中的“映像名称”属性。
         /// </summary>
-        public string Name => (string)_proxy[nameof(Name)];
+        public string? Name => (string?)_proxy[nameof(Name)];
         /// <summary>
         /// 范围操作系统的创建类名称。
         /// </summary>
-        public string OSCreationClassName => (string)_proxy[nameof(OSCreationClassName)];
+        public string? OSCreationClassName => (string?)_proxy[nameof(OSCreationClassName)];
         /// <summary>
         /// 范围操作系统的名称。
         /// </summary>
-        public string OSName => (string)_proxy[nameof(OSName)];
+        public string? OSName => (string?)_proxy[nameof(OSName)];
         /// <summary>
         /// 执行的不是读取或写入操作的 I/O 操作数。
         /// </summary>
@@ -146,12 +141,12 @@ namespace IFactory.WMI.Win32_Process
         public UInt64 ReadOperationCount => (UInt64)_proxy[nameof(ReadOperationCount)];
         public UInt64 ReadTransferCount => (UInt64)_proxy[nameof(ReadTransferCount)];
         public uint SessionId => (uint)_proxy[nameof(SessionId)];
-        public string Status => (string)_proxy[nameof(Status)];
+        public string? Status => (string?)_proxy[nameof(Status)];
         public DateTime TerminationDate => WmiValue.Date(_proxy[nameof(TerminationDate)]);
         public uint ThreadCount => (uint)_proxy[nameof(ThreadCount)];
         public UInt64 UserModeTime => (UInt64)_proxy[nameof(UserModeTime)];
         public UInt64 VirtualSize => (UInt64)_proxy[nameof(VirtualSize)];
-        public string WindowsVersion => (string)_proxy[nameof(WindowsVersion)];
+        public string? WindowsVersion => (string?)_proxy[nameof(WindowsVersion)];
         public UInt64 WorkingSetSize => (UInt64)_proxy[nameof(WorkingSetSize)];
         public UInt64 WriteOperationCount => (UInt64)_proxy[nameof(WriteOperationCount)];
         public UInt64 WriteTransferCount => (UInt64)_proxy[nameof(WriteTransferCount)];
@@ -163,7 +158,7 @@ namespace IFactory.WMI.Win32_Process
             if (ErrorCode.TryGetValue(errorCode, out var error)) return error;
             return "unknown error";
         }
-        public static Dictionary<uint, string> ErrorCode = new()
+        public static IReadOnlyDictionary<uint, string> ErrorCode { get; } = new Dictionary<uint, string>()
         {
             [0] = "",
             [2] = "Access denied",
@@ -171,13 +166,16 @@ namespace IFactory.WMI.Win32_Process
             [8] = "Unknown failure",
             [9] = "Path not found",
             [21] = "Invalid parameter",
-        };
+        }.ToFrozenDictionary();
         public static uint Create(CreateOptions options, ManagementScope scope, out uint processId)
         {
             processId = 0;
+            ArgumentNullException.ThrowIfNull(scope);
+            ArgumentException.ThrowIfNullOrWhiteSpace(options.CommandLine);
+            var startupParameters = WmiParameters.ProcessStartup(options.ProcessStartup);
             using ManagementClass processStartup = new ManagementClass(scope, new ManagementPath("Win32_ProcessStartup"), null);
             using var startupInstance = processStartup.CreateInstance()!;
-            startupInstance.SetPropertyValue(options.ProcessStartup);
+            WmiParameters.Apply(startupInstance, startupParameters);
 
             var methodName = "Create";
             using ManagementClass reg = new ManagementClass(scope, new ManagementPath("Win32_Process"), null);
@@ -205,7 +203,7 @@ namespace IFactory.WMI.Win32_Process
         {
             var methodName = "SetPriority";
             using var inParams = _proxy.GetMethodParameters(methodName);
-            inParams.SetPropertyValue("Priority", priority);
+            inParams.SetPropertyValue("Priority", (uint)priority);
             using var outParams = _proxy.InvokeMethod(methodName, inParams, null);
             return (uint)outParams["ReturnValue"];
         }

@@ -1,37 +1,45 @@
-# 审查与验证记录
+# 审查决策与验证记录
 
-验证日期：2026-11-03。平台 Windows，SDK 10.0.301，运行时 10.0.9。
+日期：2026-11-03。Windows，SDK 10.0.301，.NET 10.0.9。本文件记录当前结果；迁移首轮结果列为历史，避免混淆。
 
-## 迁移边界与基线
+## 最终决策
 
-保留源工程，复制主库、必要测试和项目结构；没有 ProjectReference 外部依赖。排除 bin/obj、IDE 状态、机器 manifest 及未参与编译的第三方 SharpWMI 示例目录。未复制原测试中的硬编码凭据、内部主机和机器专属程序路径；原整套测试会管理既有业务服务/进程，因此未执行原始整套测试。初始提交保留生产源码与只读测试基线；该基线仍是原 net9.0 配置，后续提交完成独立构建。
+| 议题 | 决定 | 实施与验证 |
+| --- | --- | --- |
+| A1 | 采纳纯 Delete 语义 | 移除隐式 Stop；非管理员回归证明只调用一次 Delete、不读状态、原样返回或抛出，不重试 |
+| A2 | 采纳 | 八个包装类的全部 provider 引用属性保守标注可空，含各类数组；[逐项清单](docs/NULLABILITY.md)，用内存 WMI schema 验证实际 null 透传 |
+| B1 | 采纳 | 局部映射默认值，不回写 options；null/空白分类，参数错误先于连接；默认值、重复映射、失败不变测试 |
+| B2 | 采纳 | 服务类型/错误控制/启动模式使用枚举，数值与字符串分别显式映射；Flags、拼写修正、未知值验证 |
+| B3 | 采纳 | CreateDefault(namespace) 统一连接设置，裸选项入口移除；设置与实际查询回归 |
+| B4 | 部分采纳 | PnP 双入口合并；DriverDate 保留 string?，拒绝 DMTF 转换建议 |
+| B5 | 采纳 | FrozenDictionary + 只读属性；移除无引用 DTO 与 ExecutionState 枚举，数值属性保留 |
+| B6 | 采纳显式映射 | 服务 Create/Change、ProcessStartup 仅传协议字段；派生类新增属性、null/空值、枚举类型回归；通用反射扩展保留并写明约定 |
+| C1 | 搁置 | 查询 helper 重构非本轮必要改动，保持现有所有权边界 |
+| C2 | 采纳 | SetPriority 显式转换 uint，自建进程实测 |
+| C3 | 采纳导入清理 | IDE0005 清理并验证无待修改；不为此开启 XML 全量文档或压制 CS1591 |
+| C4 | 采纳 | CI 配置 AnyCPU/x64；本机额外验证 x86。远程 CI 状态独立核对，不以 YAML 存在代替执行结果 |
+| C5 | 采纳不交付脚本 | 一次性迁移/脱敏辅助脚本有意不保留为交付依赖；源码及文档命令支持独立构建 |
+| C6 | 部分采纳 | 工厂参数校验先于连接；公共类名保持，README 给出 Process 别名 |
+| C7 | 采纳替代方案 | 允许合法空设备集合，记录数量；系统磁盘必须实际命中，不增加同义反复断言 |
+| C8 | 采纳 | UTC/非零偏移 DMTF、DateTime 原值及三种 Kind、缺失哨兵分别验证 |
 
-参考构建配置采用统一 props/targets、依赖版本和忽略规则，未继承公司属性、RID 或外部构建文件。SDK 固定补丁策略，目标明确为 Windows .NET 10。依赖通过 NuGet flat-container 实际查询稳定版本：System.Management 10.0.14、Microsoft.NET.Test.Sdk 18.11.0、xunit 2.9.3、xunit.runner.visualstudio 4.0.1、coverlet.collector 10.1.0。删除过时 dotnet-xunit 工具引用及无使用处的注解依赖。
+本机通过 ManagementClass.Properties 核对 MSFT_NetAdapter：仅一个 PnPDeviceID，origin=MSFT_NetAdapter，类型 String；DriverDate 同为 String。保留统一公开名 PNPDeviceID，WMI 名称查询不区分大小写。不输出真实硬件标识。
 
-## 审查修复
+## 当前验证
 
-- 所有名称查询转义 WQL 单引号和反斜杠，回归验证恶意查询片段只按字面值匹配。
-- 查询 searcher/collection、方法参数/结果、ManagementClass 及时释放；返回包装对象提供 IDisposable，由调用方释放代理。迭代器使用 using 确保正常完成和提前结束时关闭查询资源。
-- WMI 日期实际为 DMTF 字符串，统一转换；缺失日期以 DateTime.MinValue 表示，维持原非可空 API 签名。
-- NetAdapter.Get(name) 默认改用 root/StandardCimv2；网络配置按实际 SettingID 查询，修复不存在的 Name 属性查询。
-- NetAdapter.LastErrorCode 修正 UInt16/UInt32 拆箱错误；磁盘 DriveType 使用数值转换后转枚举，真实属性读取回归通过。
-- Process.Create 创建 Win32_ProcessStartup 实例后传入，避免把类定义当实例；选项映射将枚举转换为底层数值，并跳过反射索引器。
-- 解决方案显式映射 x86/x64，避免被默认映射为 AnyCPU；编译输出与中间产物按平台隔离。
-- 复审修改及相邻查询/调用生命周期，没有新增可确认、需在本轮修复的问题。此结论不代表已覆盖所有可选 provider 属性或所有系统配置。
+- AnyCPU、x86、x64 的 Release `-warnaserror` 均零警告、零错误。
+- 三个平台各 **42 通过 / 2 显式跳过 / 0 失败，总计 44**。新增契约回归 25 项全通过。
+- x86 适配器日志确认 **32-bit .NET 10.0.9**；x64 确认 **64-bit .NET 10.0.9**。依次执行后默认 AnyCPU `--no-build` 仍通过。
+- `dotnet format style IFactory.WMI.slnx --diagnostics IDE0005 --severity info --no-restore --verify-no-changes` 通过。
+- Release/AnyCPU，Coverlet `XPlat Code Coverage`，生产程序集 IFactory.WMI：**行 455/702，分支 66/92**。未覆盖的可选属性和系统管理路径仍需特定环境，覆盖率不代表所有功能验证完成。
+- 本机只读 provider 数量：逻辑磁盘 3、USB 控制器 6、USB 集线器 8、网卡 4、IPEnabled 网络配置 2。只证明当前查询与关键字段/查回测试成功，不等价于物理故障、远程设备或长期稳定性验证。
+- 自建隐藏进程的创建、优先级设置、终止及 finally 清理通过；没有管理现有业务进程。
 
-## 实际结果
+## 权限与未验证边界
 
-- Release `-warnaserror`：0 警告、0 错误。
-- AnyCPU：17 通过、2 显式跳过、0 失败，共 19；x86：相同；x64：相同。适配器日志确认 x86 为 32-bit .NET 10.0.9，x64 为 64-bit .NET 10.0.9。
-- 依次执行 x86、x64 后，默认 AnyCPU `--no-build` 仍通过。
-- 测试覆盖本机磁盘、USB、网卡与 IP 配置枚举及标识符；进程/服务读取；DMTF 日期、查询转义；自建隐藏进程的创建、优先级设置、终止与 finally 清理。可选硬件允许不存在，因此空枚举不代表已实测到对应物理设备。
-- Coverlet `XPlat Code Coverage`，Release/AnyCPU，生产程序集 IFactory.WMI：行命中 242/665，分支命中 35/76。未启用的系统管理路径及大量可选属性没有覆盖；覆盖率不等同功能正确性。
+当前令牌不具管理员角色。历史电源计划实测返回 COMException，原生 CIM 查询同样报告会话权限限制；本轮不把这条路径报告为通过。保留显式开关。服务配置变更测试只操作 GUID 唯一服务记录，finally 清理；未在本机启用。非管理员 Delete 单元测试验证派发契约，不代替真实 SCM 状态测试。
 
-## 环境限制与显式测试
-
-初轮电源计划测试实际执行失败（COMException）；系统 Get-CimInstance 同样返回终端会话权限限制。当前令牌不是管理员。保留测试为显式启用项，不将此路径报告为通过。服务创建/修改/删除测试同样要求管理员权限，并只使用 GUID 唯一服务名，finally 删除；本机未执行该项。
-
-在具有对应权限的隔离 Windows 会话中分别执行：
+在具有对应权限的隔离 Windows 会话分别执行：
 
 ```powershell
 $env:WMI_TEST_POWER_PROVIDER='1'
@@ -43,10 +51,14 @@ dotnet test IFactory.WMI.slnx -c Release --filter FullyQualifiedName~ServiceLife
 Remove-Item Env:WMI_TEST_SERVICE_MUTATION
 ```
 
-服务测试创建的 cmd.exe 仅用于服务配置记录，不启动它作为真实服务。启动/停止/暂停/继续需要专用可安装的服务程序，本轮未验证；没有操作现有业务服务。远程认证、远程主机、物理设备故障、长时稳定性未验证。可选属性可能为 null 或不受支持，见 README 的行为约束。
+服务配置测试使用 cmd.exe 路径作为配置记录，不将它启动为服务。真实服务的启动/停止/暂停/继续、运行中删除与句柄关闭时序，需要专用服务程序，未验证。远程认证、物理故障、长时压测未验证。普通测试的 provider 查询可能受系统配置或权限限制，应保留失败证据，不静默改为通过。
 
-## 公开内容检查
+## 历史迁移基线
 
-扫描待跟踪文件及基线：未纳入源测试中的凭据、业务端点或个人绝对路径；生成结果、覆盖率、临时脚本不提交。源仓库保持原样，其历史不在本次清理范围内。
+源码复制后保留原工程，没有外部 ProjectReference；排除原 Git、bin/obj、IDE 状态、未编译的第三方 SharpWMI 示例及机器 manifest。源测试中的硬编码凭据、内部主机与业务进程/服务操作没有导入。原整套测试因此没有直接执行。
 
-最终配置的无 bin/obj 源码副本还原、Release 严格构建与测试通过（17 通过、2 显式跳过）。传递依赖已检查，NuGet 当前源未报告已知易受攻击包。
+此前提交 7564b38 的本机矩阵为 17 通过 / 2 跳过，覆盖率为行 242/665、分支 35/76；这是历史值，不是当前结果。此前完成干净副本还原/构建/测试及 NuGet 传递依赖检查，当前包版本未因本轮审查变更。
+
+## 公开交付
+
+源码、测试、构建和正式文档提交；原始讨论记录、助手状态、一次性脚本、测试结果与覆盖率产物由 .gitignore 排除。GitHub Description 与 Wiki 为生成文稿，不等于已修改仓库设置或发布 Wiki。敏感信息检查范围和结果单列于 [PUBLIC-CONTENT-CHECK.md](docs/PUBLIC-CONTENT-CHECK.md)。

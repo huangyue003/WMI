@@ -30,8 +30,8 @@ public class RegressionTests
  }
  [Fact] public void ReadsAdapterByNameAndConfigurationBySettingId()
  {
-  foreach(var item in MSFT_NetAdapter.NetAdapter.Get()) using(item) { using var found = MSFT_NetAdapter.NetAdapter.Get(item.Name); Assert.NotNull(found); Assert.Equal(item.InterfaceGuid,found.InterfaceGuid); }
-  foreach(var item in Win32_NetworkAdapterConfiguration.NetworkAdapterConfiguration.Get()) using(item) { using var found = Win32_NetworkAdapterConfiguration.NetworkAdapterConfiguration.Get(item.SettingID); Assert.NotNull(found); Assert.Equal(item.Index,found.Index); }
+  foreach(var item in MSFT_NetAdapter.NetAdapter.Get()) using(item) { using var found = MSFT_NetAdapter.NetAdapter.Get(item.Name ?? throw new InvalidOperationException("Missing adapter Name")); Assert.NotNull(found); Assert.Equal(item.InterfaceGuid,found.InterfaceGuid); }
+  foreach(var item in Win32_NetworkAdapterConfiguration.NetworkAdapterConfiguration.Get()) using(item) { using var found = Win32_NetworkAdapterConfiguration.NetworkAdapterConfiguration.Get(item.SettingID ?? throw new InvalidOperationException("Missing SettingID")); Assert.NotNull(found); Assert.Equal(item.Index,found.Index); }
  }
  [Fact] public void CreatesAndTerminatesOnlyOwnedProcess()
  {

@@ -1,10 +1,4 @@
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Management;
-using System.Text;
-using System.Threading.Tasks;
-using System.Xml.Linq;
 
 namespace IFactory.WMI.Win32_USBController
 {
@@ -48,27 +42,27 @@ namespace IFactory.WMI.Win32_USBController
         #region Properties
 
         public UInt16 Availability=> (UInt16)_proxy[nameof(Availability)];
-        public string Caption => (string)_proxy[nameof(Caption)];
+        public string? Caption => (string?)_proxy[nameof(Caption)];
         public uint ConfigManagerErrorCode => (uint)_proxy[nameof(ConfigManagerErrorCode)];
         public bool ConfigManagerUserConfig => (bool)_proxy[nameof(ConfigManagerUserConfig)];
-        public string CreationClassName => (string)_proxy[nameof(CreationClassName)];
-        public string Description => (string)_proxy[nameof(Description)];
-        public string DeviceID => (string)_proxy[nameof(DeviceID)];
+        public string? CreationClassName => (string?)_proxy[nameof(CreationClassName)];
+        public string? Description => (string?)_proxy[nameof(Description)];
+        public string? DeviceID => (string?)_proxy[nameof(DeviceID)];
         public bool ErrorCleared => (bool)_proxy[nameof(ErrorCleared)];
-        public string ErrorDescription => (string)_proxy[nameof(ErrorDescription)];
+        public string? ErrorDescription => (string?)_proxy[nameof(ErrorDescription)];
         public DateTime InstallDate => WmiValue.Date(_proxy[nameof(InstallDate)]);
         public uint LastErrorCode => (uint)_proxy[nameof(LastErrorCode)];
-        public string Manufacturer => (string)_proxy[nameof(Manufacturer)];
+        public string? Manufacturer => (string?)_proxy[nameof(Manufacturer)];
         public uint MaxNumberControlled => (uint)_proxy[nameof(MaxNumberControlled)];
-        public string Name => (string)_proxy[nameof(Name)];
-        public string PNPDeviceID => (string)_proxy[nameof(PNPDeviceID)];
-        public UInt16[] PowerManagementCapabilities => (UInt16[])_proxy[nameof(PowerManagementCapabilities)];
+        public string? Name => (string?)_proxy[nameof(Name)];
+        public string? PNPDeviceID => (string?)_proxy[nameof(PNPDeviceID)];
+        public UInt16[]? PowerManagementCapabilities => (UInt16[]?)_proxy[nameof(PowerManagementCapabilities)];
         public bool PowerManagementSupported => (bool)_proxy[nameof(PowerManagementSupported)];
         public UInt16 ProtocolSupported => (UInt16)_proxy[nameof(ProtocolSupported)];
-        public string Status => (string)_proxy[nameof(Status)];
+        public string? Status => (string?)_proxy[nameof(Status)];
         public UInt16 StatusInfo => (UInt16)_proxy[nameof(StatusInfo)];
-        public string SystemCreationClassName => (string)_proxy[nameof(SystemCreationClassName)];
-        public string SystemName => (string)_proxy[nameof(SystemName)];
+        public string? SystemCreationClassName => (string?)_proxy[nameof(SystemCreationClassName)];
+        public string? SystemName => (string?)_proxy[nameof(SystemName)];
         public DateTime TimeOfLastReset => WmiValue.Date(_proxy[nameof(TimeOfLastReset)]);
 
         #endregion
