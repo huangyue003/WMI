@@ -1,0 +1,21 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+	<PropertyGroup>
+		<TargetFrameworks>net9.0</TargetFrameworks>
+		<ImplicitUsings>enable</ImplicitUsings>
+		<Nullable>enable</Nullable>
+		<LangVersion>Latest</LangVersion>
+		<Platforms>AnyCPU;x86</Platforms>
+	</PropertyGroup>
+
+	<ItemGroup>
+	  <Compile Remove="SharpWMI\**" />
+	  <EmbeddedResource Remove="SharpWMI\**" />
+	  <None Remove="SharpWMI\**" />
+	</ItemGroup>
+
+	<ItemGroup>
+		<PackageReference Include="System.Management" Version="9.0.1" />
+	</ItemGroup>
+
+</Project>
